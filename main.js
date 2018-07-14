@@ -109,22 +109,6 @@ $(function () {
     return arr[arr.length - 1].indexOf(' ');
   }
 
-  function copyLessonsTable() {
-    /* Get the text field */
-    var copyText = $(".table__body td");
-
-    copyText = copyText;
-    console.log(copyText);
-
-    /* Select the text field */
-    copyText.select();
-
-    /* Copy the text inside the text field */
-    document.execCommand("copy");
-
-    /* Alert the copied text */
-    alert("Copied the text: ");
-  }
 
   function exportTableToExcel(tableID, filename = '') {
     var downloadLink;
