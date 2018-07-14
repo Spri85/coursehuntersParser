@@ -1,0 +1,19 @@
+.heading-1 {
+  color: darkblue;
+}
+
+.heading-2 {
+  color: cornflowerblue;
+}
+
+.copy__table {
+  cursor: pointer;
+  color: indigo;
+  transition: all .2s;
+}
+
+.copy__table:hover,
+.copy__table:active {
+  color: blueviolet;
+  transform: translateY(3px);
+}
