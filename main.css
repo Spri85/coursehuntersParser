@@ -8,12 +8,12 @@
 
 .copy__table {
   cursor: pointer;
-  color: indigo;
-  transition: all .2s;
+  color: cornflowerblue;
+  transition: all 0.2s;
 }
 
 .copy__table:hover,
 .copy__table:active {
-  color: blueviolet;
+  color: rgb(17, 197, 86);
   transform: translateY(3px);
 }
