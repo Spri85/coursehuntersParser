@@ -8,10 +8,8 @@ path = tk.askdirectory(
 )
 os.chdir(path)
 # path = os.getcwd()
-print(path)
 
 filenames = os.listdir(path)
-print(filenames)
 pattern = re.compile(r"(?P<lesson_number>[\d]+)(?P<extention>\.mp4)", re.I)
 
 
