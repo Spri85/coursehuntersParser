@@ -1,15 +1,17 @@
 import os
 import re
-# from tkinter.filedialog import askopenfilename
+
 import tkinter.filedialog as tk
 path = tk.askdirectory(
     initialdir='C:/Users/spri85/Videos/4K Video Downloader',
     title='Select folder to lessons'
 )
+os.chdir(path)
 # path = os.getcwd()
+print(path)
 
 filenames = os.listdir(path)
-
+print(filenames)
 pattern = re.compile(r"(?P<lesson_number>[\d]+)(?P<extention>\.mp4)", re.I)
 
 
