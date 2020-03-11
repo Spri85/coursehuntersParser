@@ -1,4 +1,5 @@
 $(function() {
+	var courseTitle = '';
 	$('#getCourse').click(function() {
 		var list = [];
 		var output = $('.output')[0];
@@ -35,7 +36,7 @@ $(function() {
 				$(data).find(".lessons-item link[itemprop='url']")
 			).map(item => item.href);
 
-			var courseTitle = Array.from($(data).find('.hero-title')).map(
+			courseTitle = Array.from($(data).find('.hero-title')).map(
 				item => item.textContent
 			)[0];
 			// var publisher = Array.from($(data).find('.go-to-publisher'));
@@ -95,39 +96,35 @@ $(function() {
 	});
 
 	$(document).on('click touchstart', '.copy__table', function() {
-		exportTableToExcel('table', 'CourseLessonsList');
+		tableToExcel('table', courseTitle, courseTitle + '.xls');
 	});
 
-	function exportTableToExcel(tableID, filename = '') {
-		var downloadLink;
-		var dataType = 'application/vnd.ms-excel';
-		var tableSelect = document.getElementById(tableID);
-		var tableHTML = tableSelect.outerHTML.replace(/ /g, '%20');
+	var tableToExcel = (function() {
+		var uri = 'data:application/vnd.ms-excel;base64,',
+			template =
+				'<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--><meta http-equiv="content-type" content="text/plain; charset=UTF-8"/></head><body><table>{table}</table></body></html>',
+			base64 = function(s) {
+				return window.btoa(unescape(encodeURIComponent(s)));
+			},
+			format = function(s, c) {
+				return s.replace(/{(\w+)}/g, function(m, p) {
+					return c[p];
+				});
+			},
+			downloadURI = function(uri, name) {
+				var link = document.createElement('a');
+				link.download = name;
+				link.href = uri;
+				link.click();
+			};
 
-		// Specify file name
-		filename = filename ? filename + '.xls' : 'excel_data.xls';
-
-		// Create download link element
-		downloadLink = document.createElement('a');
-
-		document.body.appendChild(downloadLink);
-
-		if (navigator.msSaveOrOpenBlob) {
-			var blob = new Blob(['\ufeff', tableHTML], {
-				type: dataType
-			});
-			navigator.msSaveOrOpenBlob(blob, filename);
-		} else {
-			// Create a link to the file
-			downloadLink.href = 'data:' + dataType + ', ' + tableHTML;
-
-			// Setting the file name
-			downloadLink.download = filename;
-
-			//triggering the function
-			downloadLink.click();
-		}
-	}
+		return function(table, name, fileName) {
+			if (!table.nodeType) table = document.getElementById(table);
+			var ctx = { worksheet: name || 'Worksheet', table: table.innerHTML };
+			var resuri = uri + base64(format(template, ctx));
+			downloadURI(resuri, fileName);
+		};
+	})();
 
 	function formatingNames(arr) {
 		let maxLesson = digitLessonNumber(arr); // get qty digits in last lesson
