@@ -1,43 +1,70 @@
-$(function () {
-  $('#getCourse').click(function () {
-    var list = [];
-    var output = $('.output')[0];
+$(function() {
+	$('#getCourse').click(function() {
+		var list = [];
+		var output = $('.output')[0];
 
-    var url =
-      $('#url')[0].value ||
-      'https://coursehunters.net/course/polnoe-rukovodstvo-razrabotchika-2018-ot-dzhunika-k-senoru';
+		var url =
+			$('#url')[0].value ||
+			'https://coursehunter.net/course/react-redux-professionalnaya-razrabotka';
 
-    $.get(url, function (data) {
-      var lesson = {};
+		$.get(url, function(data) {
+			var lesson = {};
 
-      var lessNames = Array.from($(data).find('.lessons-list__li span'));
-      var lessDurations = Array.from($(data).find('.lessons-list__li em'));
-      var lessLinks = Array.from(
-        $(data).find(".lessons-list__li link[itemprop='url']")
-      );
-      var courseTitle = Array.from($(data).find('.original-name'));
-      var publisher = Array.from($(data).find('.go-to-publisher'));
+			var lessNames = Array.from(
+				$(data).find('.lessons-item .lessons-name')
+			).map(item => item.textContent);
+			lessNames = formatingNames(lessNames);
 
-      lessNames = clearText(lessNames);
-      lessNames = formatingNames(lessNames);
+			var courseDetails = Array.from(
+				$(data).find('.course-box-item .course-box-right')
+			).map(div => {
+				const titleDiv = $(div).find('.course-box-title')[0];
+				const valueDiv = $(div).find('.course-box-value')[0];
+				const title = titleDiv ? titleDiv.textContent : '';
+				const value = valueDiv ? valueDiv.textContent : '';
+				return { title, value };
+			});
 
-      lessDurations = clearText(lessDurations);
-      publisher = clearText(publisher)[0];
-      courseTitle = clearText(courseTitle)[0];
+			console.log('courseDetails:::', courseDetails);
 
-      for (var i = 0; i < lessNames.length; i++) {
-        lesson.name = lessNames[i];
-        lesson.duration = lessDurations[i];
-        lesson.link = lessLinks[i].href;
+			var lessDurations = Array.from(
+				$(data).find('.lessons-item .lessons-duration')
+			).map(item => item.textContent);
 
-        list.push({ ...lesson
-        });
-      }
+			var lessLinks = Array.from(
+				$(data).find(".lessons-item link[itemprop='url']")
+			).map(item => item.href);
 
-      output.innerHTML = ` 
+			var courseTitle = Array.from($(data).find('.hero-title')).map(
+				item => item.textContent
+			)[0];
+			// var publisher = Array.from($(data).find('.go-to-publisher'));
+
+			for (var i = 0; i < lessNames.length; i++) {
+				lesson.name = lessNames[i];
+				lesson.duration = lessDurations[i];
+				lesson.link = lessLinks[i];
+
+				list.push({ ...lesson });
+			}
+
+			let courseDetailsDom = '';
+			courseDetails.forEach(item => {
+				courseDetailsDom += `
+				<div>
+        <span>${item.title}</span>
+        <span>${item.value}</span>
+      </div>`;
+			});
+
+			output.innerHTML = ` 
       <h1 class="text-center heading-1">${courseTitle}</h1>
-      <h2 class="heading-2 copy__table text-left float-left">Export To Excel</h2>
-      <h2 class="heading-2 text-right">${publisher}</h2>
+			<h2 class="heading-2 copy__table">Export To Excel</h2>
+	
+      <div>
+       ${courseDetailsDom}
+      </div>
+
       <div class="table-responsive">
       <table class='table table-hover' id="table">
         <thead>
@@ -52,93 +79,78 @@ $(function () {
       </table>
       </div>`;
 
-      var outputInner = $('.table__body');
-      $.each(list, function (i, item) {
-        outputInner.append(
-          `<tr scope="row"><td>
+			var outputInner = $('.table__body');
+			$.each(list, function(i, item) {
+				outputInner.append(
+					`<tr scope="row"><td>
           ${item.name}
           </td>
-            <td><a class='lesson__link' href='${item.link}' target='_blank'>${
-            item.link
-          }</a></td>
+            <td><a class='lesson__link' href='${item.link}' target='_blank'>${item.link}</a></td>
             <td>
           ${item.duration}
             </td></tr>`
-        );
-      });
-    });
-  });
+				);
+			});
+		});
+	});
 
-  $(document).on('click touchstart', '.copy__table', function () {
-    exportTableToExcel('table', 'CourseLessonsList');
-  });
+	$(document).on('click touchstart', '.copy__table', function() {
+		exportTableToExcel('table', 'CourseLessonsList');
+	});
 
-  function clearText(arr) {
-    var newArr = arr.map(item => {
-      return item.innerHTML
-        .replace(/Открыть/g, '')
-        .replace(/все курсы от/g, '')
-        .replace(/Урок/g, '')
-        .replace(/\./g, '')
-        .replace(/\"/g, "'")
-        .trim();
-    });
-    return newArr;
-  }
+	function exportTableToExcel(tableID, filename = '') {
+		var downloadLink;
+		var dataType = 'application/vnd.ms-excel';
+		var tableSelect = document.getElementById(tableID);
+		var tableHTML = tableSelect.outerHTML.replace(/ /g, '%20');
 
-  function formatingNames(arr) {
-    let maxLesson = digitLessonNumber(arr); // get qty digits in last lesson
-    let newArr = arr.map(item => {
-      //formating number like 1 -> 01 if max digits 2
-      //                      1 --> 001 if max digits 3
-      let lessNumber = item.substring(0, item.indexOf(' '));
-      if (lessNumber.length < maxLesson) {
-        for (let i = lessNumber.length; i < maxLesson; i++) {
-          item = '0' + item;
-        }
-      }
+		// Specify file name
+		filename = filename ? filename + '.xls' : 'excel_data.xls';
 
-      return item + '.mp4';
-    });
+		// Create download link element
+		downloadLink = document.createElement('a');
 
-    return newArr;
-  }
+		document.body.appendChild(downloadLink);
 
-  function digitLessonNumber(arr) {
-    // getting max digits in last lesson number
-    return arr[arr.length - 1].indexOf(' ');
-  }
+		if (navigator.msSaveOrOpenBlob) {
+			var blob = new Blob(['\ufeff', tableHTML], {
+				type: dataType
+			});
+			navigator.msSaveOrOpenBlob(blob, filename);
+		} else {
+			// Create a link to the file
+			downloadLink.href = 'data:' + dataType + ', ' + tableHTML;
 
+			// Setting the file name
+			downloadLink.download = filename;
 
-  function exportTableToExcel(tableID, filename = '') {
-    var downloadLink;
-    var dataType = 'application/vnd.ms-excel';
-    var tableSelect = document.getElementById(tableID);
-    var tableHTML = tableSelect.outerHTML.replace(/ /g, '%20');
+			//triggering the function
+			downloadLink.click();
+		}
+	}
 
-    // Specify file name
-    filename = filename ? filename + '.xls' : 'excel_data.xls';
+	function formatingNames(arr) {
+		let maxLesson = digitLessonNumber(arr); // get qty digits in last lesson
+		let newArr = arr.map((item, i) => {
+			//formating number like 1 -> 01 if max digits 2
+			//                      1 --> 001 if max digits 3
+			item = i + 1 + '_' + item;
+			let currentNumberDigits = (i + 1).toString().length;
+			if (currentNumberDigits < maxLesson) {
+				for (let j = currentNumberDigits; j < maxLesson; j++) {
+					item = '0' + item;
+				}
+			}
 
-    // Create download link element
-    downloadLink = document.createElement("a");
+			return item + '.mp4';
+		});
 
-    document.body.appendChild(downloadLink);
+		return newArr;
+	}
 
-    if (navigator.msSaveOrOpenBlob) {
-      var blob = new Blob(['\ufeff', tableHTML], {
-        type: dataType
-      });
-      navigator.msSaveOrOpenBlob(blob, filename);
-    } else {
-      // Create a link to the file
-      downloadLink.href = 'data:' + dataType + ', ' + tableHTML;
-
-      // Setting the file name
-      downloadLink.download = filename;
-
-      //triggering the function
-      downloadLink.click();
-    }
-  }
-
+	function digitLessonNumber(arr) {
+		// getting max digits in last lesson number
+		const maxNumbers = arr.length.toString().length;
+		return maxNumbers;
+	}
 });
